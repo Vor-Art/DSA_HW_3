@@ -2,28 +2,97 @@
 #define GRAPH_H
 #include <graph_adt.h>
 
-template <typename V, typename E>
-class Graph : public Graph_ADT<V,E>
+template <typename V_type, typename E_type >
+class Graph : public GraphADT<V_type,E_type/*, std::unordered_map <Vertex <V_type>, Edge <Vertex <V_type>,E_type>>*/>
 {
-    using Vertex = Vertex<V>;
-    using CollectionFrom = std::unordered_map<Vertex,E>;
-    using CollectionTo = std::unordered_map<Vertex,E>;
+    using GraphADT_ = GraphADT<V_type,E_type/*, std::unordered_map <Vertex <V_type>, Edge <Vertex <V_type>,E_type>>*/>;
+    using Vertex = typename GraphADT_::Vertex;
+    using Edge = typename GraphADT_::Edge;
+    using CollectionFrom = typename GraphADT_::CollectionFrom;
+    using CollectionTo = typename GraphADT_::CollectionTo;
 
-    std::unordered_map<Vertex,std::unordered_map<Vertex,E>> container_from;
-    std::unordered_map<Vertex,std::unordered_map<Vertex,E>> container_to;
+    std::unordered_map<Vertex,CollectionFrom, typename Vertex::Hash> container_from;
+    std::unordered_map<Vertex,CollectionTo, typename Vertex::Hash> container_to;
 
 public:
-    const CollectionFrom  &addVertex(const Vertex& v)          = 0;                            //add a vertex with value value to the graph and return reference to the created vertex object;
-    Vertex                 &removeVertex(const Vertex& v)       = 0;                            //remove a vertex, provided a reference to vertex object;
-    const Edge<Vertex,E>   &addEdge(const Vertex& from, const Vertex& to, const E& weight) = 0; //add a edge between from and to vertices with weight, return reference to the created edge object;
-    Edge<Vertex,E>         &removeEdge(const Edge<Vertex,E>& e) = 0;                            //remove an edge, given a reference to an edge object;
-    const CollectionFrom  &edgesFrom(const Vertex& v)    const = 0;                            //return a collection or edge objects that are going from vertex v;
-    const CollectionTo    &edgesTo(const Vertex& v)      const = 0;                            //return a collection or edge objects that are going into vertex v;
-    const CollectionFrom  &findVertex(const Vertex& v)   const = 0;                            //find any vertex with the specified value;
-    const Edge<Vertex,E>   &findEdge(const E& from_value, const E& to_value)         const = 0; //find any edge with specified values in the source and target vertices;
-    const Edge<Vertex,E>   &findEdge(const E& value)      const = 0;                            //find edge with specified values;
-    const Edge<Vertex,E>   &hasEdge(const Vertex& from, const Vertex& to)            const = 0; //determine whether there exists a directed edge from v to u;
-
+    Graph() = default;
+    virtual ~Graph() = default;
+    const CollectionFrom &addVertex(const V_type& value)                          override;                  // O(1)
+    Vertex     removeVertex(const Vertex& vertex)                                override;                  // O(1)
+    const Edge &addEdge(const Vertex& from_vertex, const Vertex& to_vertex, const E_type& weight) override;  // O(1)
+    Edge       removeEdge(const Edge& edge)                                      override;                  // O(1)
+    const CollectionFrom &edgesFrom(const Vertex& vertex)                   const override;                  // O(1)
+    const CollectionTo   &edgesTo(const Vertex& vertex)                     const override;                  // O(1)
+    const CollectionFrom &findVertex(const V_type & value)                  const override;                  // O(1)
+    const Edge &findEdge(const V_type& from_value, const V_type& to_value)  const override;                  // O(1)
+    const Edge &hasEdge(const Vertex& from_vertex, const Vertex& to_vertex) const override;                  // O(1)
 };
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::CollectionFrom &Graph<V_type,E_type>::addVertex(const V_type &value)
+{
+    CollectionFrom tmp {};
+    Vertex vertex (value);
+    container_from.insert({vertex,tmp});
+    container_to.insert({vertex,tmp});
+    return container_from[vertex];
+}
+
+template<typename V_type, typename E_type>
+typename Graph<V_type,E_type>::Vertex Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
+{
+    Vertex tmp = vertex;
+    container_from.erase(tmp);
+    container_to.erase(tmp);
+    return tmp;
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const Vertex &from_vertex, const Vertex &to_vertex, const E_type &weight)
+{
+    Edge tmp(from_vertex,to_vertex,weight);
+    container_from[from_vertex][to_vertex] = tmp;
+    container_to[to_vertex][from_vertex] = tmp;
+    return container_from[from_vertex][to_vertex];
+}
+
+template<typename V_type, typename E_type>
+typename Graph<V_type,E_type>::Edge Graph<V_type,E_type>::removeEdge(const Edge &edge)
+{
+    Edge tmp = edge;
+    container_from[tmp.from()].erase(tmp.to());
+    container_to[tmp.to()].erase(tmp.from());
+    return tmp;
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::CollectionFrom &Graph<V_type,E_type>::edgesFrom(const Vertex &vertex) const
+{
+    return container_from.at(vertex);
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::CollectionTo &Graph<V_type,E_type>::edgesTo(const Vertex &vertex) const
+{
+    return container_to.at(vertex);
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::CollectionFrom &Graph<V_type,E_type>::findVertex(const V_type &value) const
+{
+    return container_from.at(Vertex(value));
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const V_type &from_value, const V_type &to_value) const
+{
+    return container_from.at(Vertex(from_value)).at(Vertex(to_value));
+}
+
+template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::hasEdge(const Graph::Vertex &from_vertex, const Graph::Vertex &to_vertex) const
+{
+    return container_from.at(from_vertex).at(to_vertex);
+}
 
 #endif // GRAPH_H
