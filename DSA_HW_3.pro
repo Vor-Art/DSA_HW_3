@@ -9,3 +9,6 @@ SOURCES += \
 HEADERS += \
     graph.h \
     graph_adt.h
+
+DISTFILES += \
+    input.txt

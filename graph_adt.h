@@ -1,10 +1,8 @@
 #ifndef GRAPH_ADT_H
 #define GRAPH_ADT_H
-#include <vector>
 #include <memory>
-#include <unordered_map>
 #include <functional>
-#include <sstream>
+
 
 template< typename V_type, typename E_type>
 struct GraphADTSupplement
@@ -56,6 +54,9 @@ public:
             return std::hash<V_type>{}(V_type(V));
         }
     };
+    friend std::ostream &operator << (std::ostream& out, const VertexClass& vertex){
+        return out << vertex._v;
+    }
 
 };
 
@@ -68,7 +69,7 @@ class GraphADTSupplement<V_type, E_type>::EdgeClass
 public:
     EdgeClass() = default;
     ~EdgeClass() = default;
-    explicit EdgeClass(const VertexClass& from, const VertexClass& to, const E_type& weight)
+    EdgeClass(const VertexClass& from, const VertexClass& to, const E_type& weight)
         :_from(from),_to(to),_weight(weight)
     {}
     explicit operator E_type()const{return _weight;}
