@@ -72,37 +72,39 @@ int main()
             for (const auto& vertex: path)
                 std::cout << vertex << " ";
             std::cout << std::endl;
-            continue;
+                    continue;
         }
     }
-    graph.addVertex("A");
-    graph.addVertex("B");
-    graph.addVertex("C");
-    graph.addVertex("D");
-    graph.addVertex("T");
+    { // to test some functionality
+        graph.addVertex("A");
+        graph.addVertex("B");
+        graph.addVertex("C");
+        graph.addVertex("D");
+        graph.addVertex("T");
 
-    auto vetrex = graph.findVertex("A");
+        auto vetrex = graph.findVertex("A");
 
-    graph.addEdge(vetrex, graph.findVertex("B"), "3");
-    graph.addEdge(vetrex, graph.findVertex("C"), "4");
-    graph.addEdge(vetrex, graph.findVertex("D"), "5");
-    graph.addEdge(graph.findVertex("T"), vetrex, "6");
+        graph.addEdge(vetrex, graph.findVertex("B"), "3");
+        graph.addEdge(vetrex, graph.findVertex("C"), "4");
+        graph.addEdge(vetrex, graph.findVertex("D"), "5");
+        graph.addEdge(graph.findVertex("T"), vetrex, "6");
 
-    for (const auto & a: graph.edgesFrom(vetrex)){
-        std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
-    }
+        for (const auto & a: graph.edgesFrom(vetrex)){
+            std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
+        }
 
-    for (const auto & a: graph.edgesTo(vetrex)){
-        std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
-    }
-    std::cout << "TRANSPOSE" << std::endl;
-    graph.transpose();
-    for (const auto & a: graph.edgesFrom(vetrex)){
-        std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
-    }
+        for (const auto & a: graph.edgesTo(vetrex)){
+            std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
+        }
+        std::cout << "TRANSPOSE" << std::endl;
+        graph.transpose();
+        for (const auto & a: graph.edgesFrom(vetrex)){
+            std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
+        }
 
-    for (const auto & a: graph.edgesTo(vetrex)){
-        std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
+        for (const auto & a: graph.edgesTo(vetrex)){
+            std::cout << "From: "<< a.second.from().v()<< " To: "<< a.second.to().v() << " Weight: " << a.second.weight() << std::endl;
+        }
     }
     return 0;
 }

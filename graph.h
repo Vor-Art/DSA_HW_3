@@ -20,9 +20,7 @@ class Graph : public GraphSupplement< V_type, E_type>::GraphADT_
 {
     using GraphADT = typename GraphSupplement< V_type, E_type>::GraphADT_;
     using Vertex = typename GraphADT::Vertex;
-    using VertexPtr = typename GraphADT::VertexPtr;
     using Edge = typename GraphADT::Edge;
-    using EdgePtr = typename GraphADT::EdgePtr;
     using CollectionFrom = typename GraphADT::CollectionFrom;
     using CollectionTo = typename GraphADT::CollectionTo;
 
