@@ -1,6 +1,7 @@
 #ifndef GRAPH_ADT_H
 #define GRAPH_ADT_H
 #include <memory>
+#include <ostream>
 #include <functional>
 
 

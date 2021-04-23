@@ -8,7 +8,12 @@ SOURCES += \
 
 HEADERS += \
     graph.h \
-    graph_adt.h
+    graph_adt.h \
+    test1.h \
+    test2.h \
+    test3.h
 
 DISTFILES += \
-    input.txt
+    ../../../Downloads/IU DSA Spring 2021 — Assignment 3.pdf \
+    input.txt \
+    input_3.txt

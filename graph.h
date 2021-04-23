@@ -31,7 +31,7 @@ class Graph : public GraphSupplement< V_type, E_type>::GraphADT_
     Container container_to_transpose;
 
     using VertexArr = std::vector<Vertex>;
-    using Cycle = std::pair<E_type, VertexArr>;
+    using Path = std::pair<E_type, VertexArr>;
 
     //decltype(E_type::operator+()) is required to:
     //      1) show that return value is the sum;
@@ -51,7 +51,8 @@ public:
     const Edge   &hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // O(1)
 
     void transpose(void)      ; // O(1)
-    Cycle isAcylcic(void) const; // O(n^2) , where n - number of vertex
+    Path isAcylcic(void) const; // O(n^2) , where n - number of vertex
+    Path findMinPath(const Vertex& from, const Vertex& to) const; // O()
 private:
     const Vertex& assertVertex (const Vertex& vertex)   const noexcept(false);
     const Edge& assertEdge (const Edge& edge)           const noexcept(false);
@@ -154,12 +155,12 @@ void Graph<V_type,E_type>::transpose()
 }
 
 template<class value_T, class edge_T>
-typename Graph<value_T, edge_T>::Cycle  Graph<value_T, edge_T>::isAcylcic() const
+typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
 {
     // finding a way that contains a cycle
     std::unordered_set<Vertex, typename Vertex::Hash> global_visited;
     bool success = false;
-    Cycle way_with_cycle;
+    Path way_with_cycle;
 
     for(const auto& [vertex,edge] : container_from){
         if(success)break;
@@ -172,18 +173,18 @@ typename Graph<value_T, edge_T>::Cycle  Graph<value_T, edge_T>::isAcylcic() cons
         global_visited.insert(vertex);
         local_marked.insert(vertex);
 
-        std::stack<std::pair<Vertex,Cycle>> stack;
-        stack.push({vertex, {{}, {vertex}}});
+        std::stack<std::pair<Vertex,Path>> stack;
+        stack.push({vertex, {{}, {vertex}}}); // initial stack
 
         while(!stack.empty()){
             if(success) break;
             auto obj = stack.top(); stack.pop();
             Vertex cur_vertex = obj.first;
-            Cycle cur_path = obj.second;
+            Path cur_path = obj.second;
 
             for(const auto& [next_vertex, edge]: edgesFrom(cur_vertex)){
 
-                Cycle nextWay = {cur_path.first + edge.weight(), cur_path.second};
+                Path nextWay = {cur_path.first + edge.weight(), cur_path.second};
 
                 if(local_marked.find(next_vertex) != local_marked.end()) {way_with_cycle = nextWay;success = true; break;} // cycle
                 if(global_visited.find(next_vertex) != global_visited.end()) continue; // already visited
@@ -200,6 +201,56 @@ typename Graph<value_T, edge_T>::Cycle  Graph<value_T, edge_T>::isAcylcic() cons
     if(!success) return {{},{}}; // No cycle
     return way_with_cycle;
 }
+
+
+
+template<class value_T, class edge_T>
+typename Graph<value_T, edge_T>::Path Graph<value_T, edge_T>::findMinPath(const Vertex &source, const Vertex &target) const
+{
+    // Dijkstra
+    std::unordered_map <Vertex, Path, typename Vertex::Hash > min_path;
+    std::unordered_set <Vertex, typename Vertex::Hash> visited;
+    min_path[source] = {{},{}};
+
+    while(min_path.size()< container_from.size()){
+        //iteration phase
+        bool first = true;
+        Edge minEdge;
+        for(const auto& [vertex,tmp] : container_from){
+            if (visited.find(vertex) != visited.end()) continue; //visited
+            if (min_path.find(vertex) == min_path.end()) continue; //inf path
+            if (first) {
+                minEdge = {source, min_path[vertex].first, vertex};
+                first = false;
+                continue;
+            }
+            if (minEdge.weight() >  min_path[vertex].first)
+                minEdge = {source, min_path[vertex].first, vertex};
+        }
+        if (first) continue;
+        //marked
+        visited.insert(minEdge.to());
+        //relaxation phase
+        Vertex cur_vertex = minEdge.to();
+        for(const auto& [to, edge] : edgesFrom(cur_vertex)){
+            if (min_path.find(to) == min_path.end()||
+                min_path[to].first > (minEdge.weight() + edge.weight()))
+            {
+                min_path[to].first = min_path[cur_vertex].first + edge.weight();
+                min_path[to].second = min_path[cur_vertex].second;
+                min_path[to].second.push_back(cur_vertex);
+            }
+        }
+    }
+
+    if(min_path.find(target) == min_path.end())
+        return {{},{}};  //empty
+    min_path[target];
+}
+
+
+
+
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::assertVertex(const Vertex &vertex) const noexcept(false)
