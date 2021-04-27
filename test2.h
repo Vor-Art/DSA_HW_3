@@ -17,7 +17,6 @@ void test2(void)
 
     Graph<std::string, int> graph;
     std::string	line;
-    uint64_t count = 0;
     while(getline(in, line,'\n'))
     {
         try
@@ -55,8 +54,6 @@ void test2(void)
             if ("HAS_EDGE" == command){
                 std::string from, to;
                 inputstream >> from >> to;
-                std::cout << count <<") ";
-                count++;
                 auto vertex_from = graph.findVertex(from);
                 auto vertex_to = graph.findVertex(to);
                 if (!graph.hasEdge(vertex_from, vertex_to))
@@ -83,7 +80,7 @@ void test2(void)
             }
             assert(false && "command is not found");
         } catch (...) {
-            std::cout << ":) funny error \n";
+            //std::cout << ":) funny error \n";
         }
 
     }
