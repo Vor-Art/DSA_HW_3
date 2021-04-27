@@ -1,11 +1,13 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 #include <stdexcept>
-#include <graph_adt.h>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <stack>
+
+#include <graph_adt.h>
 
 template <typename V_type, typename E_type >
 class GraphSupplement{
@@ -54,6 +56,7 @@ public:
     Path isAcylcic(void) const; // O(n^2) , where n - number of vertex
     Path findMinPath(const Vertex& from, const Vertex& to) const; // O()
 
+    std::string print();
 private:
     const Vertex& getVertex (const V_type& value)                           const noexcept(false);
     const Edge& getEdge (const V_type& from_value, const V_type& to_value)  const noexcept(false);
@@ -67,10 +70,10 @@ const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(c
 {
     Vertex vertex (value);
 
-    container_from[vertex];
-    container_to[vertex];
-    container_from_transpose[vertex];
-    container_to_transpose[vertex];
+    container_from.emplace(vertex,CollectionFrom());//[vertex];
+    container_to.emplace(vertex,CollectionFrom());
+    container_from_transpose.emplace(vertex,CollectionFrom());
+    container_to_transpose.emplace(vertex,CollectionFrom());
 
     return container_from.find(vertex)->first;
 }
@@ -78,10 +81,22 @@ const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(c
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Vertex &Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
 {
-    container_from[vertex].clear();
-    container_to[vertex].clear();
-    container_from_transpose[vertex].clear();
-    container_to_transpose[vertex].clear();
+    for (const auto& [base,edge]: container_from.at(vertex))
+        container_to.at(base).erase(vertex);
+
+    for (const auto& [base,edge]: container_to.at(vertex))
+        container_from.at(base).erase(vertex);
+
+    for (const auto& [base,edge]: container_from_transpose.at(vertex))
+        container_to_transpose.at(base).erase(vertex);
+
+    for (const auto& [base,edge]: container_to_transpose.at(vertex))
+        container_from_transpose.at(base).erase(vertex);
+
+    container_from.at(vertex).clear();
+    container_to.at(vertex).clear();
+    container_from_transpose.at(vertex).clear();
+    container_to_transpose.at(vertex).clear();
 
 
     container_from.erase(vertex);
@@ -96,24 +111,24 @@ template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const Vertex &from_vertex, const Vertex &to_vertex, const E_type &weight)
 {
     Edge tmp(from_vertex,to_vertex,weight);
-    container_from[from_vertex][to_vertex] = tmp;
-    container_to[to_vertex][from_vertex] = tmp;
+    container_from.at(from_vertex).emplace(to_vertex,tmp);
+    container_to.at(to_vertex).emplace(from_vertex,tmp);
 
     Edge tmp_transpose(to_vertex,from_vertex,weight);
-    container_from_transpose[to_vertex][from_vertex] = tmp_transpose;
-    container_to_transpose[from_vertex][to_vertex] = tmp_transpose;
+    container_from_transpose.at(to_vertex).emplace(from_vertex,tmp_transpose);
+    container_to_transpose.at(from_vertex).emplace(to_vertex,tmp_transpose);
 
-    return container_from[from_vertex][to_vertex];
+    return container_from.at(from_vertex).at(to_vertex);
 }
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::removeEdge(const Edge &edge)
 {
-    container_from[edge.from()].erase(edge.to());
-    container_to[edge.to()].erase(edge.from());
+    container_from.at(edge.from()).erase(edge.to());
+    container_to.at(edge.to()).erase(edge.from());
 
-    container_from_transpose[edge.to()].erase(edge.from());
-    container_to_transpose[edge.from()].erase(edge.to());
+    container_from_transpose.at(edge.to()).erase(edge.from());
+    container_to_transpose.at(edge.from()).erase(edge.to());
     return edge;
 }
 
@@ -248,6 +263,23 @@ typename Graph<value_T, edge_T>::Path Graph<value_T, edge_T>::findMinPath(const 
     min_path[target];
 }
 
+template<typename V_type, typename E_type>
+std::string Graph<V_type,E_type>::print()
+{
+    std::stringstream ss;
+    ss << "container_from:" << std::endl;
+    size_t indx = 0;
+    for (const auto& [from, list]:container_from)
+    {
+        ss <<indx<< ") " << from << ": ";
+        for (const auto& [to, edge]:list)
+            ss <<"[" << to<< ", " << edge.weight() << "]  ";
+        ss << std::endl;
+        indx++;
+    }
+    return ss.str();
+}
+
 
 
 
@@ -256,9 +288,10 @@ template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::getVertex(const V_type &value) const noexcept(false)
 {
     Vertex false_vertex = Vertex(value);
-    if (!container_from.count(false_vertex))
+    auto it = container_from.find(false_vertex);
+    if (it == container_from.end())
         throw std::runtime_error("there is no such vertex");
-    return container_from.find(false_vertex)->first; //true_vertex
+    return it->first; //true_vertex
 }
 
 template<typename V_type, typename E_type>
@@ -272,9 +305,10 @@ const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::getEdge(const 
     } catch (...) {
         throw std::runtime_error("incorrect vertices");
     }
-    if (!container_from.at(from).count(to))
+    auto it = container_from.at(from).find(to);
+    if (it == container_from.at(from).end())
         throw std::runtime_error("there is no connection between the vertices");
-    return container_from.at(from).at(to);
+    return it->second;
 }
 
 //template<typename V_type, typename E_type>

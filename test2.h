@@ -20,7 +20,6 @@ void test2(void)
     Graph<std::string, int> graph;
     std::string	line;
     std::cout << "start"  << std::endl;
-    int count = 0;
     std::cout << count << std::endl;
     while(getline(in, line,'\n'))
     {
@@ -59,14 +58,6 @@ void test2(void)
 
             std::string from, to;
             inputstream >> from >> to;
-            count++;
-            std::cout << count << ") " << from << " -> " << to << " " << std::endl;
-            if (count == 231)
-            {
-                count = count+0;
-                count ++;
-                count --;
-            }
             auto vertex_from = graph.findVertex(from);
             auto vertex_to = graph.findVertex(to);
             if (graph.hasEdge(vertex_from, vertex_to))
