@@ -32,7 +32,7 @@ public:
     virtual const CollectionTo   &edgesTo(const Vertex& vertex)                       const = 0; //return a collection or edge objects that are going into vertex v;
     virtual const Vertex  &findVertex(const V_type & value)                           const = 0; //find any vertex with the specified value;
     virtual const Edge    &findEdge(const V_type& from_value, const V_type& to_value) const = 0; //find any edge with specified values in the source and target vertices;
-    virtual const Edge    &hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)const = 0; //determine whether there exists a directed edge from v to u;
+    virtual bool          hasEdge(const Vertex& from_vertex, const Vertex& to_vertex) const = 0; //determine whether there exists a directed edge from v to u;
 
 };
 
@@ -44,7 +44,7 @@ class GraphADTSupplement<V_type, E_type>::VertexClass
 public:
     VertexClass() = default;
     ~VertexClass() = default;
-    VertexClass(const V_type& V):_v(new V_type(V)){}
+    explicit VertexClass(const V_type& V):_v(new V_type(V)){}
     explicit operator V_type()const{return *_v;}
     const V_type &v() const {return *_v ;}
     bool operator ==(const VertexClass& V) const {return *_v == *V._v;}
@@ -68,7 +68,7 @@ class GraphADTSupplement<V_type, E_type>::EdgeClass
 public:
     EdgeClass() = default;
     ~EdgeClass() = default;
-    EdgeClass(const VertexClass& from, const VertexClass& to, const E_type& weight)
+    explicit EdgeClass(const VertexClass& from, const VertexClass& to, const E_type& weight)
         :_from(from),_to(to),_weight(new E_type(weight))
     {}
     EdgeClass(const VertexClass& from, const VertexClass& to, const std::shared_ptr<E_type>& weight_ptr)
@@ -82,7 +82,7 @@ public:
     const E_type&   weight() const {return *_weight;}
     struct Hash {
           std::size_t operator()(const EdgeClass& E) const {
-              return typename VertexClass::Hash{}(E._from) + typename VertexClass::Hash{}(E._to);
+              return typename VertexClass::Hash{}(E._from) ^ typename VertexClass::Hash{}(E._to)<<1 ^ std::hash<V_type>{}(*E._weight)<<2;
           }
       };
 };

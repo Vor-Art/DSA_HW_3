@@ -48,14 +48,17 @@ public:
     const CollectionTo   &edgesTo(const Vertex& vertex)                                       const override; // O(1)
     const Vertex &findVertex(const V_type & value)                                            const override; // O(1)
     const Edge   &findEdge(const V_type& from_value, const V_type& to_value)                  const override; // O(1)
-    const Edge   &hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // O(1)
+    bool          hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // O(1)
 
     void transpose(void)      ; // O(1)
     Path isAcylcic(void) const; // O(n^2) , where n - number of vertex
     Path findMinPath(const Vertex& from, const Vertex& to) const; // O()
+
 private:
-    const Vertex& assertVertex (const Vertex& vertex)   const noexcept(false);
-    const Edge& assertEdge (const Edge& edge)           const noexcept(false);
+    const Vertex& getVertex (const V_type& value)                           const noexcept(false);
+    const Edge& getEdge (const V_type& from_value, const V_type& to_value)  const noexcept(false);
+//    const Vertex& assertVertex (const Vertex& vertex)   const noexcept(false);
+//    const Edge& assertEdge (const Edge& edge)           const noexcept(false);
 };
 
 
@@ -63,30 +66,37 @@ template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(const V_type &value)
 {
     Vertex vertex (value);
+
     container_from[vertex];
     container_to[vertex];
     container_from_transpose[vertex];
     container_to_transpose[vertex];
+
     return container_from.find(vertex)->first;
 }
 
 template<typename V_type, typename E_type>
 typename Graph<V_type,E_type>::Vertex Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
 {
-    assertVertex(vertex);
     Vertex tmp (vertex);
+
+    container_from[vertex].clear();
+    container_to[vertex].clear();
+    container_from_transpose[vertex].clear();
+    container_to_transpose[vertex].clear();
+
+
     container_from.erase(tmp);
     container_to.erase(tmp);
     container_from_transpose.erase(tmp);
     container_to_transpose.erase(tmp);
+
     return tmp;
 }
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const Vertex &from_vertex, const Vertex &to_vertex, const E_type &weight)
 {
-    assertVertex(from_vertex);
-    assertVertex(to_vertex);
     Edge tmp(from_vertex,to_vertex,weight);
     container_from[from_vertex][to_vertex] = tmp;
     container_to[to_vertex][from_vertex] = tmp;
@@ -101,7 +111,6 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const V
 template<typename V_type, typename E_type>
 typename Graph<V_type,E_type>::Edge Graph<V_type,E_type>::removeEdge(const Edge &edge)
 {
-    assertEdge(edge);
     Edge tmp (edge);
     container_from[tmp.from()].erase(tmp.to());
     container_to[tmp.to()].erase(tmp.from());
@@ -114,37 +123,31 @@ typename Graph<V_type,E_type>::Edge Graph<V_type,E_type>::removeEdge(const Edge 
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::CollectionFrom &Graph<V_type,E_type>::edgesFrom(const Vertex &vertex) const
 {
-    assertVertex(vertex);
     return container_from.at(vertex);
 }
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::CollectionTo &Graph<V_type,E_type>::edgesTo(const Vertex &vertex) const
 {
-    assertVertex(vertex);
     return container_to.at(vertex);
 }
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::findVertex(const V_type &value) const
 {
-    return assertVertex(container_from.find(value)->first);
+    return getVertex(value);
 }
 
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const V_type &from_value, const V_type &to_value) const
 {
-    assertVertex(from_value);
-    assertVertex(to_value);
-    return assertEdge(container_from.at(from_value).at(to_value));
+    return getEdge(from_value, to_value);
 }
 
 template<typename V_type, typename E_type>
-const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::hasEdge(const Graph::Vertex &from_vertex, const Graph::Vertex &to_vertex) const
+bool Graph<V_type,E_type>::hasEdge(const Graph::Vertex &from_vertex, const Graph::Vertex &to_vertex) const
 {
-    assertVertex(from_vertex);
-    assertVertex(to_vertex);
-    return assertEdge(container_from.at(from_vertex).at(to_vertex));
+    return container_from.at(from_vertex).count(to_vertex);
 }
 
 template<typename V_type, typename E_type>
@@ -253,25 +256,51 @@ typename Graph<value_T, edge_T>::Path Graph<value_T, edge_T>::findMinPath(const 
 
 
 template<typename V_type, typename E_type>
-const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::assertVertex(const Vertex &vertex) const noexcept(false)
+const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::getVertex(const V_type &value) const noexcept(false)
 {
-    if (container_from.find(vertex) == container_from.end())
+    Vertex false_vertex = Vertex(value);
+    if (!container_from.count(false_vertex))
         throw std::runtime_error("there is no such vertex");
-    return vertex;
+    return container_from.find(false_vertex)->first; //true_vertex
 }
 
 template<typename V_type, typename E_type>
-const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::assertEdge(const Edge &edge) const noexcept(false)
+const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::getEdge(const V_type& from_value, const V_type& to_value) const noexcept(false)
 {
+    Vertex from;
+    Vertex to;
     try {
-        assertVertex(edge.from());
-        assertVertex(edge.to());
+        from = getVertex(from_value);
+        to = getVertex(to_value);
     } catch (...) {
         throw std::runtime_error("incorrect vertices");
     }
-    if (container_from.at(edge.from()).find(edge.to()) == container_from.at(edge.from()).end())
+    if (!container_from.at(from).count(to))
         throw std::runtime_error("there is no connection between the vertices");
-    return edge;
+    return container_from.at(from).at(to);
 }
+
+//template<typename V_type, typename E_type>
+//const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::assertVertex(const Vertex &vertex) const noexcept(false)
+//{
+//    if (!container_from.count(vertex))
+//        throw std::runtime_error("there is no such vertex");
+//    return vertex;
+//}
+
+//template<typename V_type, typename E_type>
+//const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::assertEdge(const Edge &edge) const noexcept(false)
+//{
+//    try {
+//        assertVertex(edge.from());
+//        assertVertex(edge.to());
+//    } catch (...) {
+//        throw std::runtime_error("incorrect vertices");
+//    }
+
+//    if (container_from.at(edge.from()).find(edge.to()) == container_from.at(edge.from()).end())
+//        throw std::runtime_error("there is no connection between the vertices");
+//    return edge;
+//}
 
 #endif // GRAPH_H

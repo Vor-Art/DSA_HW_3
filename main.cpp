@@ -13,9 +13,9 @@
 int main()
 {
 
-    test1(); // edgeFrom, edgeTo, transpose;
+//    test1(); // edgeFrom, edgeTo, transpose;
     test2(); // from input.txt (according to 2.2)
-    test3();
+//    test3();
 
     return 0;
 }

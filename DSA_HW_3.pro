@@ -15,5 +15,8 @@ HEADERS += \
 
 DISTFILES += \
     ../../../Downloads/IU DSA Spring 2021 — Assignment 3.pdf \
+    CodeForce1_1.txt \
+    CodeForce1_2.txt \
+    basic_50000.txt \
     input.txt \
     input_3.txt
