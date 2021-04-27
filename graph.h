@@ -41,9 +41,9 @@ public:
     Graph() = default;
     virtual ~Graph() = default;
     const Vertex &addVertex(const V_type& value)                                                    override; // O(1)
-          Vertex removeVertex(const Vertex& vertex)                                                 override; // O(1)
+    const Vertex &removeVertex(const Vertex& vertex)                                                 override; // O(1)
     const Edge   &addEdge(const Vertex& from_vertex, const Vertex& to_vertex, const E_type& weight) override; // O(1)
-          Edge   removeEdge(const Edge& edge)                                                       override; // O(1)
+    const Edge   &removeEdge(const Edge& edge)                                                       override; // O(1)
     const CollectionFrom &edgesFrom(const Vertex& vertex)                                     const override; // O(1)
     const CollectionTo   &edgesTo(const Vertex& vertex)                                       const override; // O(1)
     const Vertex &findVertex(const V_type & value)                                            const override; // O(1)
@@ -76,22 +76,20 @@ const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(c
 }
 
 template<typename V_type, typename E_type>
-typename Graph<V_type,E_type>::Vertex Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
+const typename Graph<V_type,E_type>::Vertex &Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
 {
-    Vertex tmp (vertex);
-
     container_from[vertex].clear();
     container_to[vertex].clear();
     container_from_transpose[vertex].clear();
     container_to_transpose[vertex].clear();
 
 
-    container_from.erase(tmp);
-    container_to.erase(tmp);
-    container_from_transpose.erase(tmp);
-    container_to_transpose.erase(tmp);
+    container_from.erase(vertex);
+    container_to.erase(vertex);
+    container_from_transpose.erase(vertex);
+    container_to_transpose.erase(vertex);
 
-    return tmp;
+    return vertex;
 }
 
 template<typename V_type, typename E_type>
@@ -109,15 +107,14 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const V
 }
 
 template<typename V_type, typename E_type>
-typename Graph<V_type,E_type>::Edge Graph<V_type,E_type>::removeEdge(const Edge &edge)
+const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::removeEdge(const Edge &edge)
 {
-    Edge tmp (edge);
-    container_from[tmp.from()].erase(tmp.to());
-    container_to[tmp.to()].erase(tmp.from());
+    container_from[edge.from()].erase(edge.to());
+    container_to[edge.to()].erase(edge.from());
 
-    container_from_transpose[tmp.to()].erase(tmp.from());
-    container_to_transpose[tmp.from()].erase(tmp.to());
-    return tmp;
+    container_from_transpose[edge.to()].erase(edge.from());
+    container_to_transpose[edge.from()].erase(edge.to());
+    return edge;
 }
 
 template<typename V_type, typename E_type>
@@ -145,7 +142,7 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const 
 }
 
 template<typename V_type, typename E_type>
-bool Graph<V_type,E_type>::hasEdge(const Graph::Vertex &from_vertex, const Graph::Vertex &to_vertex) const
+bool Graph<V_type,E_type>::hasEdge(const Vertex &from_vertex, const Vertex &to_vertex) const
 {
     return container_from.at(from_vertex).count(to_vertex);
 }

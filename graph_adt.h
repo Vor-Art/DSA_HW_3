@@ -25,9 +25,9 @@ protected:
 
 public:
     virtual const Vertex  &addVertex(const V_type& value)                                   = 0; //add a vertex with value value to the graph and return reference to the created vertex object;
-    virtual Vertex        removeVertex(const Vertex& vertex)                                = 0; //remove a vertex, provided a reference to vertex object;
+    virtual const Vertex  &removeVertex(const Vertex& vertex)                                = 0; //remove a vertex, provided a reference to vertex object;
     virtual const Edge    &addEdge(const Vertex& from_vertex, const Vertex& to_vertex, const E_type& weight) = 0; //add a edge between from and to vertices with weight, return reference to the created edge object;
-    virtual Edge          removeEdge(const Edge& edge)                                      = 0; //remove an edge, given a reference to an edge object;
+    virtual const Edge    &removeEdge(const Edge& edge)                                      = 0; //remove an edge, given a reference to an edge object;
     virtual const CollectionFrom &edgesFrom(const Vertex& vertex)                     const = 0; //return a collection or edge objects that are going from vertex v;
     virtual const CollectionTo   &edgesTo(const Vertex& vertex)                       const = 0; //return a collection or edge objects that are going into vertex v;
     virtual const Vertex  &findVertex(const V_type & value)                           const = 0; //find any vertex with the specified value;
@@ -48,13 +48,17 @@ public:
     explicit operator V_type()const{return *_v;}
     const V_type &v() const {return *_v ;}
     bool operator ==(const VertexClass& V) const {return *_v == *V._v;}
+    bool operator >=(const VertexClass& V) const {return *_v >= *V._v;}
+    bool operator <=(const VertexClass& V) const {return *_v <= *V._v;}
+    bool operator >(const VertexClass& V) const {return *_v > *V._v;}
+    bool operator <(const VertexClass& V) const {return *_v < *V._v;}
     struct Hash {
         std::size_t operator()(const VertexClass& V) const {
-            return std::hash<V_type>{}(*V._v);
+            return std::hash<V_type>{}(*(V._v));
         }
     };
     friend std::ostream &operator << (std::ostream& out, const VertexClass& vertex){
-        return out << *vertex._v;
+        return out << *(vertex._v);
     }
 
 };
@@ -79,7 +83,7 @@ public:
     EdgeClass reverse() const {return EdgeClass(_to,_from,_weight);}
     const VertexClass& to()     const {return _to;}
     const VertexClass& from()   const {return _from;}
-    const E_type&   weight() const {return *_weight;}
+    const E_type&   weight()    const {return *_weight;}
     struct Hash {
           std::size_t operator()(const EdgeClass& E) const {
               return typename VertexClass::Hash{}(E._from) ^ typename VertexClass::Hash{}(E._to)<<1 ^ std::hash<V_type>{}(*E._weight)<<2;
