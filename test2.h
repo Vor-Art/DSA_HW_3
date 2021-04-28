@@ -11,7 +11,7 @@
 
 void test2(void)
 {
-    const std::string path = "/home/vorart/workspace/qt projects/DSA_HW_3/basic_50000.txt";
+    const std::string path = "/home/vorart/workspace/qt projects/DSA_HW_3/CodeForce1_2.txt";
     std::ifstream in(path);
     assert(in.is_open() && "file is not found");
 
@@ -20,7 +20,6 @@ void test2(void)
     Graph<std::string, int> graph;
     std::string	line;
     std::cout << "start"  << std::endl;
-    std::cout << count << std::endl;
     while(getline(in, line,'\n'))
     {
 

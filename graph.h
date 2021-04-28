@@ -50,6 +50,7 @@ public:
     const CollectionTo   &edgesTo(const Vertex& vertex)                                       const override; // O(1)
     const Vertex &findVertex(const V_type & value)                                            const override; // O(1)
     const Edge   &findEdge(const V_type& from_value, const V_type& to_value)                  const override; // O(1)
+    const Edge   &findEdge(const Vertex& from_vertex, const Vertex& to_vertex)                const;
     bool          hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // O(1)
 
     void transpose(void)      ; // O(1)
@@ -157,6 +158,12 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const 
 }
 
 template<typename V_type, typename E_type>
+const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const Vertex &from_vertex, const Vertex &to_vertex) const
+{
+    return container_from.at(from_vertex).at(to_vertex);
+}
+
+template<typename V_type, typename E_type>
 bool Graph<V_type,E_type>::hasEdge(const Vertex &from_vertex, const Vertex &to_vertex) const
 {
     return container_from.at(from_vertex).count(to_vertex);
@@ -172,6 +179,14 @@ void Graph<V_type,E_type>::transpose()
 template<class value_T, class edge_T>
 typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
 {
+    auto hasCycle =  [](const VertexArr& path)
+    {
+        for(size_t i=0;i<path.size()-1;i++) // O(n)
+            if(path[i] == path.back())
+                return true;
+        return false;
+    };
+
     // finding a way that contains a cycle
     std::unordered_set<Vertex, typename Vertex::Hash> global_visited;
     bool success = false;
@@ -179,45 +194,49 @@ typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
 
     for(const auto& [vertex,edge] : container_from){
         if(success)break;
-        if(global_visited.size() == container_from.size())break;
+//        if(global_visited.size() == container_from.size())break;
         if(global_visited.find(vertex) != global_visited.end())continue;
 
-        std::unordered_set<Vertex, typename Vertex::Hash> local_marked;
-
-
-        global_visited.insert(vertex);
-        local_marked.insert(vertex);
-
         std::stack<std::pair<Vertex,Path>> stack;
+
         stack.push({vertex, {{}, {vertex}}}); // initial stack
 
         while(!stack.empty()){
             if(success) break;
             auto obj = stack.top(); stack.pop();
-            Vertex cur_vertex = obj.first;
-            Path cur_path = obj.second;
+            auto [cur_vertex, cur_path] = obj;
+
+            global_visited.insert(cur_vertex);
 
             for(const auto& [next_vertex, edge]: edgesFrom(cur_vertex)){
 
                 Path nextWay = {cur_path.first + edge.weight(), cur_path.second};
-
-                if(local_marked.find(next_vertex) != local_marked.end()) {way_with_cycle = nextWay;success = true; break;} // cycle
-                if(global_visited.find(next_vertex) != global_visited.end()) continue; // already visited
-
                 nextWay.second.push_back(next_vertex);
-                stack.push({next_vertex, nextWay});
 
-                global_visited.insert(next_vertex);
-                local_marked.insert(next_vertex);
+                if(hasCycle(nextWay.second)) {way_with_cycle = nextWay;success = true; break;} // cycle
+                if(global_visited.count(next_vertex)) continue; // already visited
+
+                stack.push({next_vertex, nextWay});
             }
         }
     }
-
     if(!success) return {{},{}}; // No cycle
-    return way_with_cycle;
+
+
+    edge_T weight = way_with_cycle.first;
+    VertexArr vertexArr = way_with_cycle.second;
+
+    // Finding a cycle in a path with a cycle.
+    size_t i=0;
+    for(; i<vertexArr.size()-1; i++){
+        Vertex next = vertexArr[i+1];
+        Vertex cur  = vertexArr[i];
+        if(cur == vertexArr.back()) break;
+        weight -= findEdge(cur, next). weight();
+    }
+    return {weight, VertexArr(vertexArr.begin()+i+1, vertexArr.end())};
+
 }
-
-
 
 template<class value_T, class edge_T>
 typename Graph<value_T, edge_T>::Path Graph<value_T, edge_T>::findMinPath(const Vertex &source, const Vertex &target) const
