@@ -11,10 +11,10 @@
 using std::cin;
 void test3(void)
 {
-    std::cout << "start"  << std::endl;
-    const std::string file_path = "/home/vorart/workspace/qt projects/DSA_HW_3/CodeForce1_2.txt";
-    std::ifstream cin(file_path);
-    assert(cin.is_open() && "file is not found");
+//    std::cout << "start"  << std::endl;
+//    const std::string file_path = "/home/vorart/workspace/qt projects/DSA_HW_3/input.txt";
+//    std::ifstream cin(file_path);
+//    assert(cin.is_open() && "file is not found");
     std::stringstream stream;
     NWG::NetWorkGraph<int> graph;
     uint32_t N; uint32_t M;
@@ -41,11 +41,11 @@ void test3(void)
         stream<<std::endl;
     }
 
-    std::ofstream fout("output.txt");
-    fout << stream.str();
-    fout.close();
+//    std::ofstream fout("output.txt");
+//    fout << stream.str();
+//    fout.close();
     std::cout << stream.str();
-    std::cout << "end \n";
+//    std::cout << "end \n";
 }
 
 
