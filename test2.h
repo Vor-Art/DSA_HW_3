@@ -14,7 +14,6 @@ void test2(void)
     const std::string path = "/home/vorart/workspace/qt projects/DSA_HW_3/CodeForce1_2.txt";
     std::ifstream in(path);
     assert(in.is_open() && "file is not found");
-
     std::stringstream stream;
 
     Graph<std::string, int> graph;

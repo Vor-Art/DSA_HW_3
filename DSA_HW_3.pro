@@ -9,6 +9,7 @@ SOURCES += \
 HEADERS += \
     graph.h \
     graph_adt.h \
+    networkgraph.h \
     test1.h \
     test2.h \
     test3.h

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <stack>
+#include <functional>
 
 #include <graph_adt.h>
 
@@ -20,6 +21,7 @@ public:
 template <typename V_type, typename E_type >
 class Graph : public GraphSupplement< V_type, E_type>::GraphADT_
 {
+protected:
     using GraphADT = typename GraphSupplement< V_type, E_type>::GraphADT_;
     using Vertex = typename GraphADT::Vertex;
     using Edge = typename GraphADT::Edge;
@@ -35,34 +37,32 @@ class Graph : public GraphSupplement< V_type, E_type>::GraphADT_
     using VertexArr = std::vector<Vertex>;
     using Path = std::pair<E_type, VertexArr>;
 
-    //decltype(E_type::operator+()) is required to:
-    //      1) show that return value is the sum;
-    //      2) oblige compiler statically checks that ‘operator+’ is a member of the E_type.
+    using CondFunc = std::function<bool(const Edge&)>;
 
 public:
+
     Graph() = default;
     virtual ~Graph() = default;
-    const Vertex &addVertex(const V_type& value)                                                    override; // O(1)
-    const Vertex &removeVertex(const Vertex& vertex)                                                 override; // O(1)
-    const Edge   &addEdge(const Vertex& from_vertex, const Vertex& to_vertex, const E_type& weight) override; // O(1)
-    const Edge   &removeEdge(const Edge& edge)                                                       override; // O(1)
-    const CollectionFrom &edgesFrom(const Vertex& vertex)                                     const override; // O(1)
-    const CollectionTo   &edgesTo(const Vertex& vertex)                                       const override; // O(1)
-    const Vertex &findVertex(const V_type & value)                                            const override; // O(1)
-    const Edge   &findEdge(const V_type& from_value, const V_type& to_value)                  const override; // O(1)
-    const Edge   &findEdge(const Vertex& from_vertex, const Vertex& to_vertex)                const;
-    bool          hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // O(1)
+    const Vertex &addVertex(const V_type& value)                                                    override; // Average: O(1)
+    const Vertex &removeVertex(const Vertex& vertex)                                                 override;// Average: O(n)
+    const Edge   &addEdge(const Vertex& from_vertex, const Vertex& to_vertex, const E_type& weight) override; // Average: O(1)
+    const Edge   &removeEdge(const Edge& edge)                                                       override;// Average: O(1)
+    const CollectionFrom &edgesFrom(const Vertex& vertex)                                     const override; // Average: O(1)
+    const CollectionTo   &edgesTo(const Vertex& vertex)                                       const override; // Average: O(1)
+    const Vertex &findVertex(const V_type & value)                                            const override; // Average: O(1)
+    const Edge   &findEdge(const V_type& from_value, const V_type& to_value)                  const override; // Average: O(1)
+    const Edge   &findEdge(const Vertex& from_vertex, const Vertex& to_vertex)                const;          // Average: O(1)
+    bool          hasEdge(const Vertex& from_vertex, const Vertex& to_vertex)                 const override; // Average: O(1)
+
 
     void transpose(void)      ; // O(1)
-    Path isAcylcic(void) const; // O(n^2) , where n - number of vertex
-    Path findMinPath(const Vertex& from, const Vertex& to) const; // O()
+    const Path isAcylcic(void) const; // Average: O(n^2) , where n - number of vertex
+    const Path findMinPath(const Vertex& from, const Vertex& to, CondFunc = [](const Edge&){return true;}) const; // Average: O(|V|*|V|)
 
     std::string print();
 private:
     const Vertex& getVertex (const V_type& value)                           const noexcept(false);
     const Edge& getEdge (const V_type& from_value, const V_type& to_value)  const noexcept(false);
-//    const Vertex& assertVertex (const Vertex& vertex)   const noexcept(false);
-//    const Edge& assertEdge (const Edge& edge)           const noexcept(false);
 };
 
 
@@ -176,8 +176,8 @@ void Graph<V_type,E_type>::transpose()
     swap(container_to,container_to_transpose);
 }
 
-template<class value_T, class edge_T>
-typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
+template<class V_type, class E_type>
+const typename Graph<V_type, E_type>::Path  Graph<V_type, E_type>::isAcylcic() const
 {
     auto hasCycle =  [](const VertexArr& path)
     {
@@ -223,7 +223,7 @@ typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
     if(!success) return {{},{}}; // No cycle
 
 
-    edge_T weight = way_with_cycle.first;
+    E_type weight = way_with_cycle.first;
     VertexArr vertexArr = way_with_cycle.second;
 
     // Finding a cycle in a path with a cycle.
@@ -238,48 +238,55 @@ typename Graph<value_T, edge_T>::Path  Graph<value_T, edge_T>::isAcylcic() const
 
 }
 
-template<class value_T, class edge_T>
-typename Graph<value_T, edge_T>::Path Graph<value_T, edge_T>::findMinPath(const Vertex &source, const Vertex &target) const
+
+template<class V_type, class E_type>
+const typename Graph<V_type, E_type>::Path Graph<V_type, E_type>::findMinPath(const Vertex &source, const Vertex &target, CondFunc func) const
 {
     // Dijkstra
     std::unordered_map <Vertex, Path, typename Vertex::Hash > min_path;
     std::unordered_set <Vertex, typename Vertex::Hash> visited;
-    min_path[source] = {{},{}};
+    min_path[source] = {{},{source}};
 
-    while(min_path.size()< container_from.size()){
+    while (true)
+    {
         //iteration phase
         bool first = true;
-        Edge minEdge;
-        for(const auto& [vertex,tmp] : container_from){
-            if (visited.find(vertex) != visited.end()) continue; //visited
-            if (min_path.find(vertex) == min_path.end()) continue; //inf path
+        Vertex min_vertex;
+        E_type length;
+        for(const auto& [vertex, tmp] : min_path){
+            if (visited.count(vertex)) continue; //visited
             if (first) {
-                minEdge = {source, min_path[vertex].first, vertex};
+                min_vertex = vertex;
+                length = min_path[vertex].first;
                 first = false;
                 continue;
             }
-            if (minEdge.weight() >  min_path[vertex].first)
-                minEdge = {source, min_path[vertex].first, vertex};
+            if (length > min_path[vertex].first){
+                min_vertex = vertex;
+                length = min_path[vertex].first;
+            }
         }
-        if (first) continue;
+        if (first) break;
+        if (min_vertex == target) break;
         //marked
-        visited.insert(minEdge.to());
+        visited.insert(min_vertex);
         //relaxation phase
-        Vertex cur_vertex = minEdge.to();
-        for(const auto& [to, edge] : edgesFrom(cur_vertex)){
-            if (min_path.find(to) == min_path.end()||
-                min_path[to].first > (minEdge.weight() + edge.weight()))
+        for(const auto& [to, edge] : edgesFrom(min_vertex)){
+            if(!func(edge))
+                continue;
+            if (!min_path.count(to)||
+                min_path[to].first > (length + edge.weight()))
             {
-                min_path[to].first = min_path[cur_vertex].first + edge.weight();
-                min_path[to].second = min_path[cur_vertex].second;
-                min_path[to].second.push_back(cur_vertex);
+                min_path[to].first = length + edge.weight();
+                min_path[to].second = min_path[min_vertex].second;
+                min_path[to].second.push_back(to);
             }
         }
     }
 
-    if(min_path.find(target) == min_path.end())
+    if(!min_path.count(target))
         return {{},{}};  //empty
-    min_path[target];
+    return min_path[target];
 }
 
 template<typename V_type, typename E_type>
@@ -329,28 +336,4 @@ const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::getEdge(const 
         throw std::runtime_error("there is no connection between the vertices");
     return it->second;
 }
-
-//template<typename V_type, typename E_type>
-//const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::assertVertex(const Vertex &vertex) const noexcept(false)
-//{
-//    if (!container_from.count(vertex))
-//        throw std::runtime_error("there is no such vertex");
-//    return vertex;
-//}
-
-//template<typename V_type, typename E_type>
-//const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::assertEdge(const Edge &edge) const noexcept(false)
-//{
-//    try {
-//        assertVertex(edge.from());
-//        assertVertex(edge.to());
-//    } catch (...) {
-//        throw std::runtime_error("incorrect vertices");
-//    }
-
-//    if (container_from.at(edge.from()).find(edge.to()) == container_from.at(edge.from()).end())
-//        throw std::runtime_error("there is no connection between the vertices");
-//    return edge;
-//}
-
 #endif // GRAPH_H
