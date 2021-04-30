@@ -10,6 +10,15 @@
 
 #include <graph_adt.h>
 
+
+
+/* class GraphSupplement
+ * Template parameters:
+ *  E_type - type of the edge value
+ *  V_type - type of the vertex value
+ *
+ * This is a helper class required to provide access to GraphADT_
+ */
 template <typename V_type, typename E_type >
 class GraphSupplement{
     using VertexClass = typename GraphADTSupplement< V_type, E_type>::VertexClass;
@@ -18,6 +27,10 @@ public:
     using GraphADT_   = GraphADT< V_type, E_type, std::unordered_map, VertexClass, EdgeClass ,typename VertexClass::Hash>;
 };
 
+
+/* Class Graph
+ *   is implementation of GraphADT
+ */
 template <typename V_type, typename E_type >
 class Graph : public GraphSupplement< V_type, E_type>::GraphADT_
 {
@@ -65,7 +78,14 @@ private:
     const Edge& getEdge (const V_type& from_value, const V_type& to_value)  const noexcept(false);
 };
 
-
+/*
+ * Method addVertex:
+ *  Adding a vertex to a graph;
+ *  args: value of new vertex
+ *  return: pointer onto vertex
+ *
+ *  Time complexity - O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(const V_type &value)
 {
@@ -79,6 +99,13 @@ const typename Graph<V_type, E_type>::Vertex &Graph<V_type, E_type>::addVertex(c
     return container_from.find(vertex)->first;
 }
 
+/* Method removeVertex:
+ *  Removes vertex from the graph;
+ *  args: class vertex what will be deleted
+ *  return: void
+ *
+ *  Time complexity:  - O(n) Average, n - number of vertex;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Vertex &Graph<V_type,E_type>::removeVertex(const Vertex &vertex)
 {
@@ -108,6 +135,18 @@ const typename Graph<V_type,E_type>::Vertex &Graph<V_type,E_type>::removeVertex(
     return vertex;
 }
 
+
+/* Method addEdge:
+ *  Adding a new edge to a graph,
+ *  args:
+ *      from - source is pointer to vertex class,
+ *      to - target is pointer to vertex class,
+ *      weight - weight of the edge;
+ *  return:
+ *      reference to a new edge;
+ *
+ *  Time complexity - O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const Vertex &from_vertex, const Vertex &to_vertex, const E_type &weight)
 {
@@ -122,6 +161,16 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::addEdge(const V
     return container_from.at(from_vertex).at(to_vertex);
 }
 
+
+/*
+ * Method removeEdge:
+ *  Removes edge by reference
+ *  args:
+ *      edge is pointer to Edge class
+ *  return:
+ *      void
+ *  Time complexity - O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::removeEdge(const Edge &edge)
 {
@@ -133,42 +182,95 @@ const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::removeEdge(cons
     return edge;
 }
 
+
+/*
+ * Method edgesFrom:
+ *  Returns a vector of all edges, which goes from a given vertex
+ *  If there is no such a vertex, throw an exception
+ *
+ *  Time complexity - O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::CollectionFrom &Graph<V_type,E_type>::edgesFrom(const Vertex &vertex) const
 {
     return container_from.at(vertex);
 }
 
+/*
+ * Method edgesTo:
+ *  Returns a vector of all edges, which goes to a given vertex
+ *  If there is no such a vertex, throw an exception
+ *
+ *  Time complexity -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::CollectionTo &Graph<V_type,E_type>::edgesTo(const Vertex &vertex) const
 {
     return container_to.at(vertex);
 }
 
+
+/*
+ * Method findVertex:
+ *  Returns the vertex, which has given value
+ *  If there is no such a vertex, return nullptr
+ *
+ *  Time complexity  -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::findVertex(const V_type &value) const
 {
     return getVertex(value);
 }
 
+
+/*
+ * Method findEdge:
+ *  Finds any edge, which connects vertices with given value
+ *  If there is no such an edge, returns nullptr
+ *
+ *  Time complexity  -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const V_type &from_value, const V_type &to_value) const
 {
     return getEdge(from_value, to_value);
 }
 
+
+/*
+ * Overload method of findEdge:
+ *  Finds the edge between two given vertices
+ *  If there is no such an edge, returns nullptr
+ *
+ *  Time complexity  -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge &Graph<V_type,E_type>::findEdge(const Vertex &from_vertex, const Vertex &to_vertex) const
 {
     return container_from.at(from_vertex).at(to_vertex);
 }
 
+
+/*
+ * Method hasEdges:
+ *  Returns true, if there is an edge between vertices, and false otherwise
+ *
+ *  Time complexity -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 bool Graph<V_type,E_type>::hasEdge(const Vertex &from_vertex, const Vertex &to_vertex) const
 {
     return container_from.at(from_vertex).count(to_vertex);
 }
 
+
+/*
+ * Method transpose:
+ *  Transposes all edges in a graph
+ *
+ *  Time complexity -  O(1) Average;
+ */
 template<typename V_type, typename E_type>
 void Graph<V_type,E_type>::transpose()
 {
@@ -176,6 +278,15 @@ void Graph<V_type,E_type>::transpose()
     swap(container_to,container_to_transpose);
 }
 
+
+/*
+ * Method isAcylcic:
+ *  Finds the cycle in the graph.
+ *  Returns pair, where the first element is the total weight of the cycle
+ *  and second element is vector contains the cycle itself
+ *
+ *  Time complexity - Average: O(n^2) , where n - number of vertex
+ */
 template<class V_type, class E_type>
 const typename Graph<V_type, E_type>::Path  Graph<V_type, E_type>::isAcylcic() const
 {
@@ -239,6 +350,14 @@ const typename Graph<V_type, E_type>::Path  Graph<V_type, E_type>::isAcylcic() c
 }
 
 
+
+/*
+ * Method findMinPath:
+ *  Performs Dijkstra algorithm to find the min path in graph
+ *  Returns the vector containing the path, if it exists
+ *
+ *  Time complexity -  Average: O(|V|*|V|)
+ */
 template<class V_type, class E_type>
 const typename Graph<V_type, E_type>::Path Graph<V_type, E_type>::findMinPath(const Vertex &source, const Vertex &target, CondFunc func) const
 {
@@ -289,6 +408,13 @@ const typename Graph<V_type, E_type>::Path Graph<V_type, E_type>::findMinPath(co
     return min_path[target];
 }
 
+
+
+/*
+ * Method print:
+ *   Auxiliary method that outputs the current snapshot of the graph
+ * Time complexity -  Average: O(|V|*|V|)
+ */
 template<typename V_type, typename E_type>
 std::string Graph<V_type,E_type>::print()
 {
@@ -309,7 +435,9 @@ std::string Graph<V_type,E_type>::print()
 
 
 
-
+/*
+ * Service method that provides security of getVertex
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::getVertex(const V_type &value) const noexcept(false)
 {
@@ -320,6 +448,9 @@ const typename Graph<V_type, E_type>::Vertex &Graph<V_type,E_type>::getVertex(co
     return it->first; //true_vertex
 }
 
+/*
+ * Service method that provides security of getEdge
+ */
 template<typename V_type, typename E_type>
 const typename Graph<V_type,E_type>::Edge & Graph<V_type,E_type>::getEdge(const V_type& from_value, const V_type& to_value) const noexcept(false)
 {
