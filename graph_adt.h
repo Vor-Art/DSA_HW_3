@@ -4,7 +4,13 @@
 #include <ostream>
 #include <functional>
 
-
+/* class GraphADTSupplement
+ * Template parameters:
+ *  E_type - type of the edge value
+ *  V_type - type of the vertex value
+ *
+ * This is a helper class required to provide access to the Vertex Class and EdfeClass
+ */
 template< typename V_type, typename E_type>
 struct GraphADTSupplement
 {
@@ -12,6 +18,12 @@ struct GraphADTSupplement
     class VertexClass;
 };
 
+
+/* Abstract class GraphADT
+ * Template parameters:
+ *  E_type - type of the edge value
+ *  V_type - type of the vertex value
+ */
 template< typename V_type, typename E_type, template <class, class ...> class Collection, typename T, typename ... Args >
 class GraphADT
 {
@@ -36,7 +48,11 @@ public:
 
 };
 
-
+/* Class Vertex
+ * Template parameters:
+ *  V_type - type of the vertex value
+ *  E_type - type of the Edge value
+ */
 template<typename V_type, typename E_type>
 class GraphADTSupplement<V_type, E_type>::VertexClass
 {
@@ -63,6 +79,12 @@ public:
 
 };
 
+
+/* Class Edge
+ * Template parameters:
+ *  Vertex - type of the vertex class
+ *  E_type - type of the Edge value
+ */
 template<typename V_type, typename E_type>
 class GraphADTSupplement<V_type, E_type>::EdgeClass
 {
